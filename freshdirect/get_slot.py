@@ -4,8 +4,9 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.expected_conditions import *
 import datetime
+import winsound
+import threading
 
-import os
 def get_proxies():
     driver = webdriver.Chrome('../chromedriver.exe')
     driver.get("https://sslproxies.org/")
@@ -67,11 +68,12 @@ def click_select_time_and_wait(driver):
 
 def loop_until_find_slot(driver, retries=None, refresh_quiet_time=0):
     click_select_time_and_wait(driver)
+    slots=[]
     while retries is None or retries > 0:
         slots = find_slots(driver)
         if len(slots) > 0:
             print(f"{datetime.datetime.now()}: Found Slots: " + slots)
-            return
+            return slots
         else:
             # print(f"{datetime.datetime.now()}: Found no slot")
             back_to_select_and_wait(driver)
@@ -79,24 +81,51 @@ def loop_until_find_slot(driver, retries=None, refresh_quiet_time=0):
         if retries is not None:
             retries -= 1
     back_to_select_and_wait(driver)
+    return slots
+
+
+
+
+def alert_user(slots):
+    freq = 2500
+    dur = 5000
+    class AlertThread(threading.Thread):
+        def run(self):
+            self.stopped = False
+            while not self.stopped:
+                winsound.Beep(freq, dur)
+                time.sleep(1)
+                print(f"Stopped: {self.stopped}")
+
+    thread = AlertThread()
+    thread.start()
+    input(f"Found slot({slots}) - please order: Press any key to stop the beep")
+    thread.stopped = True
+    print("Waiting for alert thread to die")
+    thread.join()
+    print("alert thread is dead")
 
 def main():
     input("""
      Please log in to FreshDirect and navigate to the checkout screen and then press enter to continue
     """)
+    slots =['']
     while True:
         try:
+            if len(slots) > 0:
+                alert_user(slots)
+
             cmd = input("""Please enter how many times you want to loop for result:
                 enter * for infinite loop
                 enter q to quit
                  """)
             if cmd == "*":
-                loop_until_find_slot(driver, retries=None)
+                slots=loop_until_find_slot(driver, retries=None)
             if cmd == "q":
                 driver.quit()
                 break
             else:
-                loop_until_find_slot(driver, retries=int(cmd))
+                slots=loop_until_find_slot(driver, retries=int(cmd))
         except Exception as e:
             print(f"Exception occurred: {e}")
 
