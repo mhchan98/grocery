@@ -99,7 +99,7 @@ def random_sleep(sec, max_adj_rate = 0.3):
     time.sleep(sleep_time)
 
 
-def resume(driver):
+def resume(driver, random_level=0):
     driver.get('https://www.freshdirect.com/')
     WebDriverWait(driver, 5).until(
         visibility_of_all_elements_located((By.ID, 'locabar_popupcart_trigger')))
@@ -108,6 +108,49 @@ def resume(driver):
     print(f"{datetime.datetime.now()}: Clicking the menu bar")
     element.click()
 
+    random_move_menu(driver)
+
+    random_move_donate(driver)
+
+    for i in range(random_level * 3):
+        if random.random() > 0.5:
+            random_move_menu(driver)
+        if random.random() > 0.5:
+            random_move_donate(driver)
+
+    # checkout
+    element = driver.find_element_by_xpath('//*[@id="cartheader"]/div/div[3]/form/button')
+    random_sleep(5)
+    move_mouse(driver, element)
+    print(f"{datetime.datetime.now()}: Clicking the checkout button")
+    element.click()
+    random_sleep(1)
+
+
+def random_move_donate(driver):
+    # move to donate
+    donate_selectors = [
+        '#cartCarousels > div > div > div > div > ul > li',
+        '#cartCarousels > div > div > div > div > ul > li + li',
+        '#cartCarousels > div > div > div > div > ul > li + li + li',
+    ]
+    move_times = random.randint(1, 2)
+    while move_times > 0:
+        idx = random.randint(0, len(donate_selectors) - 1)
+        selector = donate_selectors[idx]
+        try:
+            item = driver.find_element_by_css_selector(selector)
+            print(
+                f"{datetime.datetime.now()}: moving to {idx} move_times: ({move_times})")
+            move_mouse(driver, item)
+            random_sleep(0.75)
+            move_times -= 1
+        except Exception as e:
+            print(
+                f"{datetime.datetime.now()}: Exception occurred in resume moving menu {idx} - remaining retries({move_times}): {e}")
+
+
+def random_move_menu(driver):
     # move menu
     menus_xpaths = [
         ('/html/body/div[8]/nav/div/div[1]/ul/li[1]', 'prepared'),
@@ -140,46 +183,20 @@ def resume(driver):
             print(
                 f"{datetime.datetime.now()}: Exception occurred in resume moving menu {idx} - remaining retries({move_times}): {e}")
 
-    # move to donate
-    donate_selectors = [
-        '#cartCarousels > div > div > div > div > ul > li',
-        '#cartCarousels > div > div > div > div > ul > li + li',
-        '#cartCarousels > div > div > div > div > ul > li + li + li',
-    ]
-    move_times = random.randint(1, 2)
-    while move_times > 0:
-        idx = random.randint(0, len(donate_selectors) - 1)
-        selector = donate_selectors[idx]
-        try:
-            item = driver.find_element_by_css_selector(selector)
-            print(
-                f"{datetime.datetime.now()}: moving to {idx} move_times: ({move_times})")
-            move_mouse(driver, item)
-            random_sleep(0.75)
-            move_times -= 1
-        except Exception as e:
-            print(
-                f"{datetime.datetime.now()}: Exception occurred in resume moving menu {idx} - remaining retries({move_times}): {e}")
-
-    # checkout
-    element = driver.find_element_by_xpath('//*[@id="cartheader"]/div/div[3]/form/button')
-    random_sleep(5)
-    move_mouse(driver, element)
-    print(f"{datetime.datetime.now()}: Clicking the checkout button")
-    element.click()
-    random_sleep(1)
-
 
 def resume_with_retry(driver, resume_retries=5):
+    idx = 0
     while resume_retries > 0:
         try:
             print(f"{datetime.datetime.now()}: Trying to resume")
-            resume(driver)
+            resume(driver, random_level=idx)
             click_select_time_and_wait(driver)
             return
         except Exception as e:
             print(f"{datetime.datetime.now()}: Exception occurred in resume_with_retry - remaining retries({resume_retries}): {e}")
+            random_sleep(2 * (idx + 1))
             resume_retries -= 1
+            idx += 1
 
 
 def loop_until_find_slot(driver, retries=None, refresh_quiet_time=0):
