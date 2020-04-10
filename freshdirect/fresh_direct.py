@@ -42,6 +42,7 @@ def move_mouse(driver, element):
 
 def move_mouse_to_headers(driver):
     num_headers_try = random.randint(1, 4)
+    print(f"{datetime.datetime.now()}: move_mouse_to_headers ({num_headers_try})")
     while num_headers_try > 0:
         col_num = random.randint(0, 6)
         try:
@@ -78,16 +79,44 @@ def find_slots(driver):
     move_mouse_to_headers(driver)
     header = driver.find_element_by_css_selector('#timeslot-tab > div > span.cancel.hidden.right > button')
     move_mouse(driver, header)
+    in_slot = True
     if random.random() > 0.5:
         print(f"{datetime.datetime.now()}: click cancel")
         header.click()
+        in_slot = False
+
+    if random.random() > 0.5:
+        in_slot = ping_pong(driver, in_slot, click=random.randint(1, 5))
 
     if random.random() > 0.8:
         # 20% chance to have a long wait
         print(f"{datetime.datetime.now()}: random long wait hit")
-        random_sleep(12.0)
+        in_slot = ping_pong(driver, in_slot, click=random.randint(12, 15))
 
     return result
+
+
+def click_cancel(driver):
+    WebDriverWait(driver, 5).until(
+        visibility_of_all_elements_located((By.ID, 'ts_d1_ts0_time')))
+    btn = driver.find_element_by_css_selector('#timeslot-tab > div > span.cancel.hidden.right > button')
+    move_mouse(driver, btn)
+    btn.click()
+
+
+def ping_pong(driver, in_slot, click=10):
+    print(f"{datetime.datetime.now()}: ping pong ({click})")
+    while click > 0:
+        if in_slot:
+            click_cancel(driver)
+            in_slot = False
+        else:
+            click_select_time(driver)
+            in_slot = True
+        random_sleep(0.8)
+        click -= 1
+
+    return in_slot
 
 
 def back_to_select_and_wait(driver):
@@ -151,8 +180,13 @@ def random_move_donate(driver):
         '#cartCarousels > div > div > div > div > ul > li + li + li',
     ]
     move_times = random.randint(1, 2)
+    last_idx = None
     while move_times > 0:
         idx = random.randint(0, len(donate_selectors) - 1)
+        while last_idx is not None and idx == last_idx:
+            idx = random.randint(0, len(donate_selectors) - 1)
+        last_idx = idx
+
         selector = donate_selectors[idx]
         try:
             item = driver.find_element_by_css_selector(selector)
