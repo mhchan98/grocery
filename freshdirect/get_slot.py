@@ -70,4 +70,4 @@ def run_loop(url: str, loop_func):
             else:
                 slots = loop_func(driver, retries=int(cmd))
         except Exception as e:
-            print(f"Exception occurred: {e}")
+            print(f"Exception occurred in run_loop: {e}")

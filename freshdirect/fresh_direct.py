@@ -99,6 +99,18 @@ def resume(driver):
     time.sleep(1)
 
 
+def resume_with_retry(driver, resume_retries=5):
+    while resume_retries > 0:
+        try:
+            print(f"{datetime.datetime.now()}: Trying to resume")
+            resume(driver)
+            click_select_time_and_wait(driver)
+            return
+        except Exception as e:
+            print(f"{datetime.datetime.now()}: Exception occurred in resume_with_retry - remaining retries({resume_retries}): {e}")
+            resume_retries -= 1
+
+
 def loop_until_find_slot(driver, retries=None, refresh_quiet_time=0):
     click_select_time_and_wait(driver)
     slots=[]
@@ -114,12 +126,10 @@ def loop_until_find_slot(driver, retries=None, refresh_quiet_time=0):
                 back_to_select_and_wait(driver)
                 click_select_time_and_wait(driver)
         except Exception as e:
-            print(f"{datetime.datetime.now()}: Exception occurred: {e}")
+            print(f"{datetime.datetime.now()}: Exception occurred in loop_until_find_slot: {e}")
             time.sleep(5)
             if site_blocked(driver):
-                print(f"{datetime.datetime.now()}: Trying to resume")
-                resume(driver)
-                click_select_time_and_wait(driver)
+                resume_with_retry(driver)
             else:
                 raise e
 

@@ -36,6 +36,7 @@ def section_match_no_delivery(driver):
         print(f"{datetime.datetime.now()}: Exception occurred while section_match_no_delivery: {e}")
         return False
 
+
 def refresh(driver):
     driver.refresh()
     WebDriverWait(driver, 5).until(
@@ -43,12 +44,24 @@ def refresh(driver):
     time.sleep(1)
 
 
+def select_slot(driver):
+    today_id = datetime.datetime.now().strftime('%Y%m%d')
+    element = driver.find_element_by_xpath(f'//*[@id="{today_id}"]/div[1]/div/ul/li/span/span/div/div[2]/span/span/button/div')
+    print(f"{datetime.datetime.now()}: click {today_id} free slot")
+    element.click()
+    continue_btn = driver.find_element_by_xpath('//*[@id="shipoption-select"]/div/div/div/div/div[2]/div[3]/div/span/span/span/input')
+    time.sleep(0.2)
+    print(f"{datetime.datetime.now()}: click continue")
+    continue_btn.click()
+
+
 def loop_until_find_slot(driver, retries=None, refresh_quiet_time=0):
     slots=[]
     while retries is None or retries > 0:
         slots = find_slots(driver)
         if len(slots) > 0:
-            print(f"{datetime.datetime.now()}: Found Slots: " + slots)
+            print(f"{datetime.datetime.now()}: Found Slots: {slots}")
+            select_slot(driver)
             return slots
         else:
             print(f"{datetime.datetime.now()}: Found no slot")
