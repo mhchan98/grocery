@@ -98,6 +98,7 @@ def random_sleep(sec, max_adj_rate = 0.3):
     sleep_time = sec + adjustment
     time.sleep(sleep_time)
 
+
 def resume(driver):
     driver.get('https://www.freshdirect.com/')
     WebDriverWait(driver, 5).until(
@@ -107,12 +108,19 @@ def resume(driver):
     print(f"{datetime.datetime.now()}: Clicking the menu bar")
     element.click()
 
+    # move to pastry
     WebDriverWait(driver, 5).until(
         visibility_of_all_elements_located((By.XPATH, '//*[@id="cartheader"]/div/div[3]/form/button')))
     random_sleep(1)
     pastry_menu = driver.find_element_by_xpath('/html/body/div[8]/nav/div/div[1]/ul/li[8]')
     move_mouse(driver, pastry_menu)
 
+    # move to donate
+    donate = driver.find_element_by_css_selector('#cartCarousels > div > div > div > div > ul > li')
+    random_sleep(0.75)
+    move_mouse(driver, donate)
+
+    # checkout
     element = driver.find_element_by_xpath('//*[@id="cartheader"]/div/div[3]/form/button')
     random_sleep(5)
     move_mouse(driver, element)
