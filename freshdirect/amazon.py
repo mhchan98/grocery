@@ -5,17 +5,36 @@ from selenium.webdriver.support.expected_conditions import *
 from freshdirect.get_slot import run_loop
 import time
 
-def find_slots(driver):
-    result = []
-    alerts = driver.find_elements_by_class_name('ufss-slotselect-unavailable-alert')
-    for alert in alerts:
-        if 'No delivery windows available. New windows are released throughout the day.' == alert.text:
-            result.clear()
-            break
-        else:
-            result.append(alert.text)
-    return result
 
+def find_slots(driver):
+    if has_alert(driver) and section_match_no_delivery(driver):
+        return []
+    else:
+        return ['find some slot']
+
+
+def has_alert(driver):
+    try:
+        alerts = driver.find_elements_by_class_name('ufss-slotselect-unavailable-alert')
+        result = False
+        for alert in alerts:
+            if 'No delivery windows available. New windows are released throughout the day.' == alert.text:
+                result = True
+                break
+        return result
+    except Exception as e:
+        print(f"{datetime.datetime.now()}: Exception occurred while has_alert: {e}")
+        return False
+
+
+def section_match_no_delivery(driver):
+    try:
+        element = driver.find_element_by_css_selector(
+            '#shipoption-select > div > div > div > div > div.ufss-widget-grid > div:nth-child(4) ')
+        return element.text == 'Select a time\nBe sure to chill your perishables immediately upon receiving your order.\nNo delivery windows available. New windows are released throughout the day.'
+    except Exception as e:
+        print(f"{datetime.datetime.now()}: Exception occurred while section_match_no_delivery: {e}")
+        return False
 
 def refresh(driver):
     driver.refresh()
