@@ -7,6 +7,7 @@ import time
 
 
 def find_slots(driver):
+    print(f"{datetime.datetime.now()}: Finding slots")
     if has_alert(driver) and section_match_no_delivery(driver):
         return []
     else:
@@ -38,10 +39,13 @@ def section_match_no_delivery(driver):
 
 
 def refresh(driver):
-    driver.refresh()
-    WebDriverWait(driver, 5).until(
-        visibility_of_all_elements_located((By.XPATH, '//*[@id="shipoption-select"]/div/div/div/div/div[1]/div[4]/div[1]/h3')))
-    time.sleep(1)
+    try:
+        driver.refresh()
+        WebDriverWait(driver, 5).until(
+            visibility_of_all_elements_located((By.XPATH, '//*[@id="shipoption-select"]/div/div/div/div/div[1]/div[4]/div[1]/h3')))
+        time.sleep(1)
+    except Exception as e:
+        print(f"{datetime.datetime.now()}: Exception occurred while refresh: {e}")
 
 
 def select_slot(driver):
@@ -59,6 +63,12 @@ def select_slot(driver):
     print(f"{datetime.datetime.now()}: click continue2")
     continue2_btn = driver.find_element_by_xpath('//*[@id="continue-top"]')
     continue2_btn.click()
+
+
+def _handle_item_unavailable(driver):
+    print(f"{datetime.datetime.now()}: handling item unavailable")
+    btn = driver.find_element_by_xpath('//*[@id="changeQuantityFormId"]/div[7]/div/div/span/span/input')
+    btn.click()
 
 
 def loop_until_find_slot(driver, retries=None, refresh_quiet_time=0):

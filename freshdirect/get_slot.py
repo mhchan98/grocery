@@ -3,7 +3,7 @@ from selenium import webdriver
 import winsound
 import threading
 import os
-
+import traceback
 
 def create_driver(url):
     options = webdriver.ChromeOptions()
@@ -72,3 +72,4 @@ def run_loop(url: str, loop_func):
                 slots = loop_func(driver, retries=int(cmd))
         except Exception as e:
             print(f"Exception occurred in run_loop: {e}")
+            traceback.print_exc()
