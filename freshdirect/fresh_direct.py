@@ -108,17 +108,58 @@ def resume(driver):
     print(f"{datetime.datetime.now()}: Clicking the menu bar")
     element.click()
 
-    # move to pastry
+    # move menu
+    menus_xpaths = [
+        ('/html/body/div[8]/nav/div/div[1]/ul/li[1]', 'prepared'),
+        ('/html/body/div[8]/nav/div/div[1]/ul/li[2]', "fruit"),
+        ('/html/body/div[8]/nav/div/div[1]/ul/li[3]', "vegetables"),
+        ('/html/body/div[8]/nav/div/div[1]/ul/li[4]', "meat"),
+        ('/html/body/div[8]/nav/div/div[1]/ul/li[5]', "seafood"),
+        ('/html/body/div[8]/nav/div/div[1]/ul/li[6]', "dairy"),
+        ('/html/body/div[8]/nav/div/div[1]/ul/li[7]', "deli"),
+        ('/html/body/div[8]/nav/div/div[1]/ul/li[8]', "pastry"),
+        ('/html/body/div[8]/nav/div/div[1]/ul/li[9]', "grocery"),
+        ('/html/body/div[8]/nav/div/div[1]/ul/li[10]', "frozen"),
+        ('/html/body/div[8]/nav/div/div[1]/ul/li[11]', "beer"),
+    ]
     WebDriverWait(driver, 5).until(
         visibility_of_all_elements_located((By.XPATH, '//*[@id="cartheader"]/div/div[3]/form/button')))
     random_sleep(1)
-    pastry_menu = driver.find_element_by_xpath('/html/body/div[8]/nav/div/div[1]/ul/li[8]')
-    move_mouse(driver, pastry_menu)
+    move_times = random.randint(1, 3)
+    while move_times > 0:
+        idx = random.randint(0, len(menus_xpaths) - 1)
+        xpath, desc = menus_xpaths[idx]
+        try:
+            menu_item = driver.find_element_by_xpath(xpath)
+            print(
+                f"{datetime.datetime.now()}: moving to {desc} move_times: ({move_times})")
+            move_mouse(driver, menu_item)
+            random_sleep(0.75)
+            move_times -= 1
+        except Exception as e:
+            print(
+                f"{datetime.datetime.now()}: Exception occurred in resume moving menu {idx} - remaining retries({move_times}): {e}")
 
     # move to donate
-    donate = driver.find_element_by_css_selector('#cartCarousels > div > div > div > div > ul > li')
-    random_sleep(0.75)
-    move_mouse(driver, donate)
+    donate_selectors = [
+        '#cartCarousels > div > div > div > div > ul > li',
+        '#cartCarousels > div > div > div > div > ul > li + li',
+        '#cartCarousels > div > div > div > div > ul > li + li + li',
+    ]
+    move_times = random.randint(1, 2)
+    while move_times > 0:
+        idx = random.randint(0, len(donate_selectors) - 1)
+        selector = donate_selectors[idx]
+        try:
+            item = driver.find_element_by_css_selector(selector)
+            print(
+                f"{datetime.datetime.now()}: moving to {idx} move_times: ({move_times})")
+            move_mouse(driver, item)
+            random_sleep(0.75)
+            move_times -= 1
+        except Exception as e:
+            print(
+                f"{datetime.datetime.now()}: Exception occurred in resume moving menu {idx} - remaining retries({move_times}): {e}")
 
     # checkout
     element = driver.find_element_by_xpath('//*[@id="cartheader"]/div/div[3]/form/button')

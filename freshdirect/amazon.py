@@ -68,22 +68,37 @@ def select_slot(driver):
     print(f"{datetime.datetime.now()}: click continue")
     continue_btn.click()
 
-    # pick the payment and contine
-    WebDriverWait(driver, 30).until(
-        visibility_of_all_elements_located((By.XPATH, '//*[@id="checkoutDisplayPage"]/div[1]/div[2]/div[2]/div[2]/h1')))
-    time.sleep(0.2)
-    print(f"{datetime.datetime.now()}: click continue2")
-    continue2_btn = driver.find_element_by_xpath('//*[@id="continue-top"]')
-    continue2_btn.click()
+    # pick the payment and continue
+    try:
+        try:
+            WebDriverWait(driver, 10).until(
+                visibility_of_all_elements_located((By.XPATH, '//*[@id="checkoutDisplayPage"]/div[1]/div[2]/div[2]/div[2]/h1')))
+        except Exception as e:
+            print(f"Exception occurred while waiting in picking payment: {e}")
+            traceback.print_exc()
+        time.sleep(0.2)
+        print(f"{datetime.datetime.now()}: click continue2")
+        continue2_btn = driver.find_element_by_xpath('//*[@id="continue-top"]')
+        continue2_btn.click()
+    except Exception as e:
+        print(f"Exception occurred in picking payment: {e}")
+        traceback.print_exc()
 
     # place the order
-    WebDriverWait(driver, 30).until(
-        visibility_of_all_elements_located((By.XPATH, '//*[@id="header"]/div[2]/div/div[1]')))
-    time.sleep(0.2)
-    print(f"{datetime.datetime.now()}: click place your order")
-    order_btn = driver.find_element_by_xpath('//*[@id="placeYourOrder"]/span/input')
-    order_btn.click()
-
+    try:
+        try:
+            WebDriverWait(driver, 30).until(
+                visibility_of_all_elements_located((By.XPATH, '//*[@id="header"]/div[2]/div/div[1]')))
+            time.sleep(0.2)
+        except Exception as e:
+            print(f"Exception occurred while waiting in placing order: {e}")
+            traceback.print_exc()
+        print(f"{datetime.datetime.now()}: click place your order")
+        order_btn = driver.find_element_by_xpath('//*[@id="placeYourOrder"]/span/input')
+        order_btn.click()
+    except Exception as e:
+        print(f"Exception occurred in placing order: {e}")
+        traceback.print_exc()
 
 
 def _handle_item_unavailable(driver):
