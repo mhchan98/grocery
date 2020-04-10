@@ -29,6 +29,7 @@ def alert_user(slots):
 
     class AlertThread(threading.Thread):
         def __init__(self):
+            super().__init__()
             self.stopped = False
 
         def run(self):

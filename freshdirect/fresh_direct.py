@@ -39,9 +39,22 @@ def move_mouse(driver, element):
     action_chains.move_to_element(element).perform()
 
 
+def move_mouse_to_headers(driver):
+    num_headers_try = random.randint(1, 4)
+    while num_headers_try > 0:
+        col_num = random.randint(0, 6)
+        try:
+            move_mouse(driver, driver.find_element_by_xpath(f'//*[@id="ts_d{col_num}_hC"]'))
+            random_sleep(0.5)
+            num_headers_try -= 1
+        except Exception as e:
+            print(f"Exception occurred while moving to column header {col_num}, num_headers_try({num_headers_try}): {e}")
+
+
 def find_slots(driver):
     WebDriverWait(driver, 5).until(
         visibility_of_all_elements_located((By.ID, 'ts_d1_ts0_time')))
+    move_mouse_to_headers(driver)
     header = driver.find_element_by_css_selector('#timeslot-tab > div > span.cancel.hidden.right > button')
     move_mouse(driver, header)
     result = []
@@ -64,12 +77,12 @@ def find_slots(driver):
 def back_to_select_and_wait(driver):
     print(f"{datetime.datetime.now()}: refreshing")
     driver.refresh()
-    time.sleep(random.randint(1, 4))
+    random_sleep(random.randint(1, 4))
 
 
 def click_select_time_and_wait(driver):
     click_select_time(driver)
-    time.sleep(2 * random.random())
+    random_sleep(2 * random.random())
 
 
 def site_blocked(driver):
@@ -80,6 +93,11 @@ def site_blocked(driver):
         return False
 
 
+def random_sleep(sec, max_adj_rate = 0.3):
+    adjustment = (random.random() - 0.5)/0.5 * (sec * max_adj_rate)
+    sleep_time = sec + adjustment
+    time.sleep(sleep_time)
+
 def resume(driver):
     driver.get('https://www.freshdirect.com/')
     WebDriverWait(driver, 5).until(
@@ -88,15 +106,19 @@ def resume(driver):
     move_mouse(driver, element)
     print(f"{datetime.datetime.now()}: Clicking the menu bar")
     element.click()
+
     WebDriverWait(driver, 5).until(
         visibility_of_all_elements_located((By.XPATH, '//*[@id="cartheader"]/div/div[3]/form/button')))
-    time.sleep(1)
+    random_sleep(1)
+    pastry_menu = driver.find_element_by_xpath('/html/body/div[8]/nav/div/div[1]/ul/li[8]')
+    move_mouse(driver, pastry_menu)
+
     element = driver.find_element_by_xpath('//*[@id="cartheader"]/div/div[3]/form/button')
-    time.sleep(5)
+    random_sleep(5)
     move_mouse(driver, element)
     print(f"{datetime.datetime.now()}: Clicking the checkout button")
     element.click()
-    time.sleep(1)
+    random_sleep(1)
 
 
 def resume_with_retry(driver, resume_retries=5):
@@ -122,12 +144,12 @@ def loop_until_find_slot(driver, retries=None, refresh_quiet_time=0):
                 return slots
             else:
                 print(f"{datetime.datetime.now()}: Found no slot")
-                time.sleep(1)
+                random_sleep(1)
                 back_to_select_and_wait(driver)
                 click_select_time_and_wait(driver)
         except Exception as e:
             print(f"{datetime.datetime.now()}: Exception occurred in loop_until_find_slot: {e}")
-            time.sleep(5)
+            random_sleep(5)
             if site_blocked(driver):
                 resume_with_retry(driver)
             else:

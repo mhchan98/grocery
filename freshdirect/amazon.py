@@ -53,6 +53,12 @@ def select_slot(driver):
     time.sleep(0.2)
     print(f"{datetime.datetime.now()}: click continue")
     continue_btn.click()
+    WebDriverWait(driver, 5).until(
+        visibility_of_all_elements_located((By.XPATH, '//*[@id="checkoutDisplayPage"]/div[1]/div[2]/div[2]/div[2]/h1')))
+    time.sleep(0.2)
+    print(f"{datetime.datetime.now()}: click continue2")
+    continue2_btn = driver.find_element_by_xpath('//*[@id="continue-top"]')
+    continue2_btn.click()
 
 
 def loop_until_find_slot(driver, retries=None, refresh_quiet_time=0):
