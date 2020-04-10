@@ -45,7 +45,7 @@ def move_mouse_to_headers(driver):
         col_num = random.randint(0, 6)
         try:
             move_mouse(driver, driver.find_element_by_xpath(f'//*[@id="ts_d{col_num}_hC"]'))
-            random_sleep(0.5)
+            random_sleep(0.75)
             num_headers_try -= 1
         except Exception as e:
             print(f"Exception occurred while moving to column header {col_num}, num_headers_try({num_headers_try}): {e}")
