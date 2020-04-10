@@ -65,7 +65,7 @@ def run_loop(url: str, loop_func):
                  """)
             if cmd == "*":
                 slots = loop_func(driver, retries=None)
-            if cmd == "q":
+            elif cmd == "q":
                 driver.quit()
                 break
             else:
