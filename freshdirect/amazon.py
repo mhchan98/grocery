@@ -1,7 +1,9 @@
 import datetime
-
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.expected_conditions import *
 from freshdirect.get_slot import run_loop
-
+import time
 
 def find_slots(driver):
     result = []
@@ -17,6 +19,9 @@ def find_slots(driver):
 
 def refresh(driver):
     driver.refresh()
+    WebDriverWait(driver, 5).until(
+        visibility_of_all_elements_located((By.XPATH, '//*[@id="shipoption-select"]/div/div/div/div/div[1]/div[4]/div[1]/h3')))
+    time.sleep(1)
 
 
 def loop_until_find_slot(driver, retries=None, refresh_quiet_time=0):
