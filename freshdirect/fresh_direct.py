@@ -1,13 +1,10 @@
-import time
 from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.expected_conditions import *
 import datetime
-import winsound
-import threading
 
-from freshdirect import get_slot
+from freshdirect.get_slot import run_loop
 
 
 def get_proxies():
@@ -79,7 +76,7 @@ def loop_until_find_slot(driver, retries=None, refresh_quiet_time=0):
 
 
 def main():
-    get_slot.main('https://www.freshdirect.com/', loop_until_find_slot)
+    run_loop('https://www.freshdirect.com/', loop_until_find_slot)
 
 
 if __name__ == '__main__':
