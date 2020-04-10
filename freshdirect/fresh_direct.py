@@ -6,6 +6,7 @@ from selenium.webdriver import ActionChains
 import datetime
 import time
 import random
+import traceback
 
 
 from freshdirect.get_slot import run_loop
@@ -48,15 +49,14 @@ def move_mouse_to_headers(driver):
             random_sleep(0.75)
             num_headers_try -= 1
         except Exception as e:
-            print(f"Exception occurred while moving to column header {col_num}, num_headers_try({num_headers_try}): {e}")
+            if "javascript error: Failed to execute 'elementsFromPoint'" not in f"{e}":
+                print(f"Exception occurred while moving to column header {col_num}, num_headers_try({num_headers_try}): {e}")
+                #traceback.print_exc()
 
 
 def find_slots(driver):
     WebDriverWait(driver, 5).until(
         visibility_of_all_elements_located((By.ID, 'ts_d1_ts0_time')))
-    move_mouse_to_headers(driver)
-    header = driver.find_element_by_css_selector('#timeslot-tab > div > span.cancel.hidden.right > button')
-    move_mouse(driver, header)
     result = []
     for col_idx in range(1, 6+1):
         for row_idx in range(5):
@@ -70,6 +70,22 @@ def find_slots(driver):
                     #print(f"No slot day_{col_idx}, slot_{row_idx}: {slot.text}")
             except Exception as e:
                 print(f"Exception processing slot day_{col_idx}, slot_{row_idx}: {e}")
+                traceback.print_exc()
+
+    if len(result) > 0:
+        return result
+
+    move_mouse_to_headers(driver)
+    header = driver.find_element_by_css_selector('#timeslot-tab > div > span.cancel.hidden.right > button')
+    move_mouse(driver, header)
+    if random.random() > 0.5:
+        print(f"{datetime.datetime.now()}: click cancel")
+        header.click()
+
+    if random.random() > 0.8:
+        # 20% chance to have a long wait
+        print(f"{datetime.datetime.now()}: random long wait hit")
+        random_sleep(12.0)
 
     return result
 
@@ -82,7 +98,7 @@ def back_to_select_and_wait(driver):
 
 def click_select_time_and_wait(driver):
     click_select_time(driver)
-    random_sleep(2 * random.random())
+    random_sleep(random.randint(1, 10))
 
 
 def site_blocked(driver):
@@ -110,13 +126,13 @@ def resume(driver, random_level=0):
 
     random_move_menu(driver)
 
-    random_move_donate(driver)
-
     for i in range(random_level * 3):
         if random.random() > 0.5:
             random_move_menu(driver)
         if random.random() > 0.5:
             random_move_donate(driver)
+
+    random_move_donate(driver)
 
     # checkout
     element = driver.find_element_by_xpath('//*[@id="cartheader"]/div/div[3]/form/button')
@@ -140,14 +156,13 @@ def random_move_donate(driver):
         selector = donate_selectors[idx]
         try:
             item = driver.find_element_by_css_selector(selector)
-            print(
-                f"{datetime.datetime.now()}: moving to {idx} move_times: ({move_times})")
+            print(f"{datetime.datetime.now()}: moving to {idx} move_times: ({move_times})")
             move_mouse(driver, item)
             random_sleep(0.75)
             move_times -= 1
         except Exception as e:
-            print(
-                f"{datetime.datetime.now()}: Exception occurred in resume moving menu {idx} - remaining retries({move_times}): {e}")
+            print(f"{datetime.datetime.now()}: Exception occurred in resume moving menu {idx} - remaining retries({move_times}): {e}")
+            traceback.print_exc()
 
 
 def random_move_menu(driver):
@@ -174,14 +189,13 @@ def random_move_menu(driver):
         xpath, desc = menus_xpaths[idx]
         try:
             menu_item = driver.find_element_by_xpath(xpath)
-            print(
-                f"{datetime.datetime.now()}: moving to {desc} move_times: ({move_times})")
+            print(f"{datetime.datetime.now()}: moving to {desc} move_times: ({move_times})")
             move_mouse(driver, menu_item)
             random_sleep(0.75)
             move_times -= 1
         except Exception as e:
-            print(
-                f"{datetime.datetime.now()}: Exception occurred in resume moving menu {idx} - remaining retries({move_times}): {e}")
+            print(f"{datetime.datetime.now()}: Exception occurred in resume moving menu {idx} - remaining retries({move_times}): {e}")
+            traceback.print_exc()
 
 
 def resume_with_retry(driver, resume_retries=5):
@@ -194,6 +208,7 @@ def resume_with_retry(driver, resume_retries=5):
             return
         except Exception as e:
             print(f"{datetime.datetime.now()}: Exception occurred in resume_with_retry - remaining retries({resume_retries}): {e}")
+            traceback.print_exc()
             random_sleep(2 * (idx + 1))
             resume_retries -= 1
             idx += 1
@@ -215,6 +230,7 @@ def loop_until_find_slot(driver, retries=None, refresh_quiet_time=0):
                 click_select_time_and_wait(driver)
         except Exception as e:
             print(f"{datetime.datetime.now()}: Exception occurred in loop_until_find_slot: {e}")
+            traceback.print_exc()
             random_sleep(5)
             if site_blocked(driver):
                 resume_with_retry(driver)
