@@ -2,9 +2,11 @@ from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.expected_conditions import *
+from selenium.webdriver import ActionChains
 import datetime
 import time
 import random
+
 
 from freshdirect.get_slot import run_loop
 
@@ -24,11 +26,24 @@ def get_proxies():
 
 
 def click_select_time(driver):
+    WebDriverWait(driver, 5).until(
+        visibility_of_all_elements_located((By.ID, 'subtotalbox2')))
     select_time_btn = driver.find_element_by_class_name('orange')
+    move_mouse(driver, select_time_btn)
+    print(f"{datetime.datetime.now()}: Clicking select time")
     select_time_btn.click()
 
 
+def move_mouse(driver, element):
+    action_chains = ActionChains(driver)
+    action_chains.move_to_element(element).perform()
+
+
 def find_slots(driver):
+    WebDriverWait(driver, 5).until(
+        visibility_of_all_elements_located((By.ID, 'ts_d1_ts0_time')))
+    header = driver.find_element_by_css_selector('#timeslot-tab > div > span.cancel.hidden.right > button')
+    move_mouse(driver, header)
     result = []
     for col_idx in range(1, 6+1):
         for row_idx in range(5):
@@ -47,30 +62,67 @@ def find_slots(driver):
 
 
 def back_to_select_and_wait(driver):
+    print(f"{datetime.datetime.now()}: refreshing")
     driver.refresh()
-    WebDriverWait(driver, 5).until(
-        visibility_of_all_elements_located((By.ID, 'subtotalbox2')))
-    time.sleep(random.randint(1, 3))
+    time.sleep(random.randint(1, 4))
 
 
 def click_select_time_and_wait(driver):
     click_select_time(driver)
+    time.sleep(2 * random.random())
+
+
+def site_blocked(driver):
+    body_element = driver.find_element_by_css_selector('body')
+    if "Access Denied\nYou don\'t have permission to access" in body_element.text:
+        return True
+    else:
+        return False
+
+
+def resume(driver):
+    driver.get('https://www.freshdirect.com/')
     WebDriverWait(driver, 5).until(
-        visibility_of_all_elements_located((By.ID, 'ts_d1_ts0_time')))
+        visibility_of_all_elements_located((By.ID, 'locabar_popupcart_trigger')))
+    element = driver.find_element_by_id('locabar_popupcart_trigger')
+    move_mouse(driver, element)
+    print(f"{datetime.datetime.now()}: Clicking the menu bar")
+    element.click()
+    WebDriverWait(driver, 5).until(
+        visibility_of_all_elements_located((By.XPATH, '//*[@id="cartheader"]/div/div[3]/form/button')))
+    time.sleep(1)
+    element = driver.find_element_by_xpath('//*[@id="cartheader"]/div/div[3]/form/button')
+    time.sleep(5)
+    move_mouse(driver, element)
+    print(f"{datetime.datetime.now()}: Clicking the checkout button")
+    element.click()
+    time.sleep(1)
 
 
 def loop_until_find_slot(driver, retries=None, refresh_quiet_time=0):
     click_select_time_and_wait(driver)
     slots=[]
     while retries is None or retries > 0:
-        slots = find_slots(driver)
-        if len(slots) > 0:
-            print(f"{datetime.datetime.now()}: Found Slots: " + slots)
-            return slots
-        else:
-            print(f"{datetime.datetime.now()}: Found no slot")
-            back_to_select_and_wait(driver)
-            click_select_time_and_wait(driver)
+        try:
+            slots = find_slots(driver)
+            if len(slots) > 0:
+                print(f"{datetime.datetime.now()}: Found Slots: " + slots)
+                return slots
+            else:
+                print(f"{datetime.datetime.now()}: Found no slot")
+                time.sleep(1)
+                back_to_select_and_wait(driver)
+                click_select_time_and_wait(driver)
+        except Exception as e:
+            print(f"{datetime.datetime.now()}: Exception occurred: {e}")
+            time.sleep(5)
+            if site_blocked(driver):
+                print(f"{datetime.datetime.now()}: Trying to resume")
+                resume(driver)
+                click_select_time_and_wait(driver)
+            else:
+                raise e
+
         if retries is not None:
             retries -= 1
     back_to_select_and_wait(driver)
