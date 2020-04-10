@@ -37,7 +37,7 @@ def alert_user(slots):
             while not self.stopped:
                 winsound.Beep(freq, dur)
                 time.sleep(1)
-                print(f"Stopped: {self.stopped}")
+                #print(f"Stopped: {self.stopped}")
 
     thread = AlertThread()
     thread.start()
