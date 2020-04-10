@@ -45,10 +45,11 @@ def find_slots(driver):
         for row_idx in range(5):
             slot = driver.find_element_by_id(f"ts_d{col_idx}_ts{row_idx}_time")
             if "tsSoldoutC" not in slot.get_attribute("class").split(' '):
-                #print(f"Find slot day_{col_idx}, slot_{row_idx}: {slot.text}")
+                print(f"Find slot day_{col_idx}, slot_{row_idx}: {slot.text}")
                 result.append(slot.text)
             else:
-                print(f"No slot day_{col_idx}, slot_{row_idx}: {slot.text}")
+                pass
+                #print(f"No slot day_{col_idx}, slot_{row_idx}: {slot.text}")
     return result
 
 
@@ -75,7 +76,7 @@ def loop_until_find_slot(driver, retries=None, refresh_quiet_time=0):
             print(f"{datetime.datetime.now()}: Found Slots: " + slots)
             return slots
         else:
-            # print(f"{datetime.datetime.now()}: Found no slot")
+            print(f"{datetime.datetime.now()}: Found no slot")
             back_to_select_and_wait(driver)
             click_select_time_and_wait(driver)
         if retries is not None:
@@ -109,7 +110,7 @@ def main():
     input("""
      Please log in to FreshDirect and navigate to the checkout screen and then press enter to continue
     """)
-    slots =['']
+    slots =[]
     while True:
         try:
             if len(slots) > 0:
