@@ -68,6 +68,9 @@ def select_slot(driver):
     print(f"{datetime.datetime.now()}: click continue")
     continue_btn.click()
 
+    # it may have remove item
+    _handle_item_unavailable(driver)
+
     # pick the payment and continue
     try:
         try:
@@ -87,7 +90,7 @@ def select_slot(driver):
     # place the order
     try:
         try:
-            WebDriverWait(driver, 30).until(
+            WebDriverWait(driver, 10).until(
                 visibility_of_all_elements_located((By.XPATH, '//*[@id="header"]/div[2]/div/div[1]')))
             time.sleep(0.2)
         except Exception as e:
@@ -102,8 +105,16 @@ def select_slot(driver):
 
 
 def _handle_item_unavailable(driver):
+    xpath = '//*[@id="changeQuantityFormId"]/div[7]/div/div/span/span/input'
+    try:
+        WebDriverWait(driver, 2).until(
+            visibility_of_all_elements_located((By.XPATH, xpath)))
+    except Exception as e:
+        print(f"Exception occurred while waiting in handling item unavailable - ignore: {e}")
+        return
+
     print(f"{datetime.datetime.now()}: handling item unavailable")
-    btn = driver.find_element_by_xpath('//*[@id="changeQuantityFormId"]/div[7]/div/div/span/span/input')
+    btn = driver.find_element_by_xpath(xpath)
     btn.click()
 
 
