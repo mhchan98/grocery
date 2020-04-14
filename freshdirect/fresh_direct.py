@@ -25,6 +25,8 @@ def get_proxies():
     print(proxies)
     return proxies
 
+use_fast = False
+
 
 def click_select_time(driver):
     WebDriverWait(driver, 5).until(
@@ -56,14 +58,14 @@ def move_mouse_to_headers(driver):
 
 
 def find_slots(driver):
-    WebDriverWait(driver, 5).until(
+    WebDriverWait(driver, 10).until(
         visibility_of_all_elements_located((By.ID, 'ts_d1_ts0_time')))
     result = []
     for col_idx in range(1, 6+1):
         for row_idx in range(5):
             try:
                 slot = driver.find_element_by_id(f"ts_d{col_idx}_ts{row_idx}_time")
-                if "tsSoldoutC" not in slot.get_attribute("class").split(' '):
+                if "tsSoldoutC" not in slot.get_attribute("class").split(' ') and len(slot.text.strip(' ')) > 0:
                     print(f"Find slot day_{col_idx}, slot_{row_idx}: {slot.text}")
                     result.append(slot.text)
                 else:
@@ -119,15 +121,20 @@ def ping_pong(driver, in_slot, click=10):
     return in_slot
 
 
-def back_to_select_and_wait(driver):
+def back_to_select_and_wait(driver, min_wait=10):
     print(f"{datetime.datetime.now()}: refreshing")
     driver.refresh()
-    random_sleep(random.randint(1, 4))
+    if use_fast:
+        wait_max = min_wait + 2
+    else:
+        wait_max = min_wait + 4
+    random_sleep(random.randint(min_wait, wait_max))
 
 
 def click_select_time_and_wait(driver):
     click_select_time(driver)
-    random_sleep(random.randint(1, 10))
+    if not use_fast:
+        random_sleep(random.randint(1, 10))
 
 
 def site_blocked(driver):
@@ -174,22 +181,22 @@ def resume(driver, random_level=0):
 
 def random_move_donate(driver):
     # move to donate
-    donate_selectors = [
-        '#cartCarousels > div > div > div > div > ul > li',
-        '#cartCarousels > div > div > div > div > ul > li + li',
-        '#cartCarousels > div > div > div > div > ul > li + li + li',
+    donate_xpaths = [
+        "//li[@data-product-id='mkt_pid_9000218']",
+        "//li[@data-product-id='mkt_pid_9000219']",
+        "//li[@data-product-id='mkt_pid_9000220']",
     ]
     move_times = random.randint(1, 2)
     last_idx = None
     while move_times > 0:
-        idx = random.randint(0, len(donate_selectors) - 1)
+        idx = random.randint(0, len(donate_xpaths) - 1)
         while last_idx is not None and idx == last_idx:
-            idx = random.randint(0, len(donate_selectors) - 1)
+            idx = random.randint(0, len(donate_xpaths) - 1)
         last_idx = idx
 
-        selector = donate_selectors[idx]
+        xpath = donate_xpaths[idx]
         try:
-            item = driver.find_element_by_css_selector(selector)
+            item = driver.find_element_by_xpath(xpath)
             print(f"{datetime.datetime.now()}: moving to {idx} move_times: ({move_times})")
             move_mouse(driver, item)
             random_sleep(0.75)
@@ -202,17 +209,17 @@ def random_move_donate(driver):
 def random_move_menu(driver):
     # move menu
     menus_xpaths = [
-        ('/html/body/div[8]/nav/div/div[1]/ul/li[1]', 'prepared'),
-        ('/html/body/div[8]/nav/div/div[1]/ul/li[2]', "fruit"),
-        ('/html/body/div[8]/nav/div/div[1]/ul/li[3]', "vegetables"),
-        ('/html/body/div[8]/nav/div/div[1]/ul/li[4]', "meat"),
-        ('/html/body/div[8]/nav/div/div[1]/ul/li[5]', "seafood"),
-        ('/html/body/div[8]/nav/div/div[1]/ul/li[6]', "dairy"),
-        ('/html/body/div[8]/nav/div/div[1]/ul/li[7]', "deli"),
-        ('/html/body/div[8]/nav/div/div[1]/ul/li[8]', "pastry"),
-        ('/html/body/div[8]/nav/div/div[1]/ul/li[9]', "grocery"),
-        ('/html/body/div[8]/nav/div/div[1]/ul/li[10]', "frozen"),
-        ('/html/body/div[8]/nav/div/div[1]/ul/li[11]', "beer"),
+        ("//li[@data-id='meal']", 'prepared'),
+        ("//a[@href='/browse.jsp?id=fru&trk=gnav']", "fruit"),
+        ("//a[@href='/browse.jsp?id=veg&trk=gnav']", "vegetables"),
+        ("//a[@href='/browse.jsp?id=meatandpoultry&trk=gnav']", "meat"),
+        ("//a[@href='/browse.jsp?id=sea&trk=gnav']", "seafood"),
+        ("//a[@href='/browse.jsp?id=dai&trk=gnav']", "dairy"),
+        ("//a[@href='/browse.jsp?id=deliandcheese&trk=gnav']", "deli"),
+        ("//a[@href='/browse.jsp?id=bky&trk=gnav']", "pastry"),
+        ("//a[@href='/browse.jsp?id=supergro&trk=gnav']", "grocery"),
+        ("//a[@href='/browse.jsp?id=fro&trk=gnav']", "frozen"),
+        ("//li[@data-id='beer']", "beer"),
     ]
     WebDriverWait(driver, 5).until(
         visibility_of_all_elements_located((By.XPATH, '//*[@id="cartheader"]/div/div[3]/form/button')))
@@ -255,7 +262,7 @@ def loop_until_find_slot(driver, retries=None, refresh_quiet_time=0):
         try:
             slots = find_slots(driver)
             if len(slots) > 0:
-                print(f"{datetime.datetime.now()}: Found Slots: " + slots)
+                print(f"{datetime.datetime.now()}: Found Slots: {slots}")
                 return slots
             else:
                 print(f"{datetime.datetime.now()}: Found no slot")
